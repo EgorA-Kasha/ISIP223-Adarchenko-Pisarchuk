@@ -50,7 +50,7 @@ while (v != 0)
             var copy = new List<Tuple<string, double>>();
             var z = data.Count;
             for (int i = 0; i < z; i++)
-            { //?????
+            {
                 int min_i = 0;
                 for (int j = 0; j < data.Count; j++)
                     if (data[j].Item2 < data[min_i].Item2)
