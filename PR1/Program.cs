@@ -2,49 +2,49 @@
 
 class TextStatistics
 {
-    public string OriginalText { get; set; }
-    public int WordCount { get; set; }
-    public string ShortestWord { get; set; }
-    public int SentenceCount { get; set; }
-    public int VowelCount { get; set; }
-    public int ConsonantCount { get; set; }
-    public string LongestWord { get; set; }
-    public Dictionary<char, int> LetterFrequency { get; set; }
+    public string originalText { get; set; }
+    public int wordCount { get; set; }
+    public string shortestWord { get; set; }
+    public int sentenceCount { get; set; }
+    public int glasCount { get; set; }
+    public int soglCount { get; set; }
+    public string longestWord { get; set; }
+    public Dictionary<char, int> letterFrequency { get; set; }
 
     public TextStatistics(string text)
     {
-        OriginalText = text;
+        originalText = text;
         AnalyzeText();
     }
 
     private void AnalyzeText()
     {
         // Подсчёт слов: разделяем по пробелам и знакам препинания
-        var words = Regex.Split(OriginalText, @"\W+").Where(w => !string.IsNullOrEmpty(w)).ToArray();
-        WordCount = words.Length;
+        var words = Regex.Split(originalText, @"\W+").Where(w => !string.IsNullOrEmpty(w)).ToArray();
+        wordCount = words.Length;
 
         // Самое короткое слово
-        ShortestWord = words.OrderBy(w => w.Length).FirstOrDefault();
+        shortestWord = words.OrderBy(w => w.Length).FirstOrDefault();
 
         // Самое длинное слово
-        LongestWord = words.OrderByDescending(w => w.Length).FirstOrDefault();
+        longestWord = words.OrderByDescending(w => w.Length).FirstOrDefault();
 
         // Подсчёт предложений: по точкам, восклицательным и вопросительным знакам
-        SentenceCount = Regex.Matches(OriginalText, @"[.!?]").Count;
+        sentenceCount = Regex.Matches(originalText, @"[.!?]").Count;
 
         // Подсчёт гласных и согласных (для английского и русского)
-        VowelCount = OriginalText.Count(c => "aeiouyаеёиоуыэюя".Contains(char.ToLower(c)));
-        ConsonantCount = OriginalText.Count(c => char.IsLetter(c) && !"aeiouyаеёиоуыэюя".Contains(char.ToLower(c)));
+        glasCount = originalText.Count(c => "aeiouyаеёиоуыэюя".Contains(char.ToLower(c)));
+        soglCount = originalText.Count(c => char.IsLetter(c) && !"aeiouyаеёиоуыэюя".Contains(char.ToLower(c)));
 
         // Частота букв
-        LetterFrequency = new Dictionary<char, int>();
-        foreach (char c in OriginalText.Where(char.IsLetter))
+        letterFrequency = new Dictionary<char, int>();
+        foreach (char c in originalText.Where(char.IsLetter))
         {
             char lower = char.ToLower(c);
-            if (LetterFrequency.ContainsKey(lower))
-                LetterFrequency[lower]++;
+            if (letterFrequency.ContainsKey(lower))
+                letterFrequency[lower]++;
             else
-                LetterFrequency[lower] = 1;
+                letterFrequency[lower] = 1;
         }
     }
 }
@@ -57,42 +57,61 @@ class Program
 
         while (true)
         {
-            Console.WriteLine("Введите текст (минимум 100 символов):");
-            string input = Console.ReadLine();
-
-            if (input.Length < 100)
-            {
-                Console.WriteLine("Текст слишком короткий. Попробуйте снова.");
-                continue;
-            }
-
-            TextStatistics stats = new TextStatistics(input);
-            statisticsList.Add(stats);
-
-            Console.WriteLine("\nСтатистика для введённого текста:");
-            Console.WriteLine($"Количество слов: {stats.WordCount}");
-            Console.WriteLine($"Самое короткое слово: {stats.ShortestWord}");
-            Console.WriteLine($"Количество предложений: {stats.SentenceCount}");
-            Console.WriteLine($"Гласных букв: {stats.VowelCount}");
-            Console.WriteLine($"Согласных букв: {stats.ConsonantCount}");
-            Console.WriteLine($"Самое длинное слово: {stats.LongestWord}");
-            Console.WriteLine("Частота букв:");
-            foreach (var pair in stats.LetterFrequency.OrderBy(p => p.Key))
-            {
-                Console.WriteLine($"  {pair.Key}: {pair.Value}");
-            }
-
-            Console.WriteLine("\nВыберите действие:");
-            Console.WriteLine("1. Продолжить с новым текстом");
-            Console.WriteLine("2. Выйти");
+            Console.WriteLine("Выберите действие:");
+            Console.WriteLine("1. Ввести новый текст и проанализировать");
+            Console.WriteLine("2. Вывести статистику по прошлым текстам");
+            Console.WriteLine("3. Выйти\n");
 
             string choice = Console.ReadLine();
+
             if (choice == "1")
             {
-                continue;
+                Console.WriteLine("\nВведите текст (минимум 100 символов):");
+                string input = Console.ReadLine();
+
+                if (input.Length < 100)
+                {
+                    Console.WriteLine("Текст слишком короткий. Попробуйте снова.");
+                    continue;
+                }
+
+                TextStatistics stats = new TextStatistics(input);
+                statisticsList.Add(stats);
+
+                Console.WriteLine("\nСтатистика для введённого текста:");
+                Console.WriteLine($"Количество слов: {stats.wordCount}");
+                Console.WriteLine($"Самое короткое слово: {stats.shortestWord}");
+                Console.WriteLine($"Количество предложений: {stats.sentenceCount}");
+                Console.WriteLine($"Гласных букв: {stats.glasCount}");
+                Console.WriteLine($"Согласных букв: {stats.soglCount}");
+                Console.WriteLine($"Самое длинное слово: {stats.longestWord}\n");
+                Console.WriteLine("Частота букв:");
+                foreach (var pair in stats.letterFrequency.OrderBy(p => p.Key))
+                {
+                    Console.WriteLine($"  {pair.Key}: {pair.Value}");
+                }
             }
-            
             else if (choice == "2")
+            {
+                if (statisticsList.Count == 0)
+                {
+                    Console.WriteLine("Нет сохранённых статистик.");
+                }
+                else
+                {
+                    Console.WriteLine("\nСтатистика по прошлым текстам:");
+                    for (int i = 0; i < statisticsList.Count; i++)
+                    {
+                        Console.WriteLine($"\nТекст {i + 1}: {statisticsList[i].originalText.Substring(0, Math.Min(50, statisticsList[i].originalText.Length))}...");
+                        Console.WriteLine($"Количество слов: {statisticsList[i].wordCount}");
+                        Console.WriteLine($"Самое короткое слово: {statisticsList[i].shortestWord}");
+                        Console.WriteLine($"Количество предложений: {statisticsList[i].sentenceCount}");
+                        Console.WriteLine($"Гласных: {statisticsList[i].glasCount}, Согласных: {statisticsList[i].soglCount}");
+                        Console.WriteLine($"Самое длинное слово: {statisticsList[i].longestWord}");
+                    }
+                }
+            }
+            else if (choice == "3")
             {
                 break;
             }
@@ -103,3 +122,4 @@ class Program
         }
     }
 }
+
