@@ -67,7 +67,9 @@ class Program
             Console.WriteLine("3. Заказать поставку товара");
             Console.WriteLine("4. Продать товар");
             Console.WriteLine("5. Поиск товаров");
-            Console.WriteLine("6. Выход");
+            Console.WriteLine("6. Отменить последнюю продажу");
+            Console.WriteLine("7. Получить отчёт о продажах");
+            Console.WriteLine("8. Выход");
             Console.Write("Выберите опцию: ");
 
             string choice = Console.ReadLine();
@@ -89,6 +91,12 @@ class Program
                     SearchProducts();
                     break;
                 case "6":
+                    UndoLastSale();
+                    break;
+                case "7":
+                    ShowSalesReport();
+                    break;
+                case "8":
                     return;
                 default:
                     Console.WriteLine("Неверный выбор. Нажмите Enter для продолжения.");
@@ -347,6 +355,74 @@ class Program
         else
         {
             Console.WriteLine("Товары не найдены.");
+        }
+
+        Console.WriteLine("Нажмите Enter для продолжения.");
+        Console.ReadLine();
+    }
+
+    static void UndoLastSale()
+    {
+        Console.Clear();
+        if (salesHistory.Count == 0)
+        {
+            Console.WriteLine("Нет продаж для отмены.");
+        }
+        else
+        {
+            SaleRecord lastSale = salesHistory.Pop();
+
+            Product product = products.FirstOrDefault(p => p.Code == lastSale.ProductCode);
+            if (product != null)
+            {
+                product.Quantity += lastSale.QuantitySold;
+                product.UpdateStock();
+
+                Console.WriteLine($"Отмена последней продажи: товар \"{product.Name}\", количество {lastSale.QuantitySold} возвращено на склад.");
+            }
+            else
+            {
+                Console.WriteLine("Ошибка: товар из истории продаж не найден в базе.");
+            }
+        }
+
+        Console.WriteLine("Нажмите Enter для продолжения.");
+        Console.ReadLine();
+    }
+
+    static void ShowSalesReport()
+    {
+        Console.Clear();
+        if (salesHistory.Count == 0)
+        {
+            Console.WriteLine("Продаж пока не было.");
+        }
+        else
+        {
+            // группируем продажи по коду и имени товара
+            var groupedSales = salesHistory
+                .GroupBy(s => new { s.ProductCode, s.ProductName })
+                .Select(g => new
+                {
+                    ProductCode = g.Key.ProductCode,
+                    ProductName = g.Key.ProductName,
+                    TotalQuantity = g.Sum(s => s.QuantitySold),
+                    TotalSum = g.Sum(s => s.TotalPrice)
+                })
+                .ToList();
+
+            double grandTotal = groupedSales.Sum(s => s.TotalSum);
+
+            Console.WriteLine("Отчёт о продажах:");
+            Console.WriteLine("Код\tНазвание\tКоличество\tСумма");
+
+            foreach (var item in groupedSales)
+            {
+                Console.WriteLine($"{item.ProductCode}\t{item.ProductName}\t{item.TotalQuantity}\t\t{item.TotalSum:C}");
+            }
+
+            Console.WriteLine("---------------------------------------------");
+            Console.WriteLine($"Общая сумма продаж: {grandTotal:C}");
         }
 
         Console.WriteLine("Нажмите Enter для продолжения.");
