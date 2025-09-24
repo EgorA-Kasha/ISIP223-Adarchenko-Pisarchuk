@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LibraryApp
+namespace Library
 {
     enum Genre
     {
@@ -48,6 +48,7 @@ namespace LibraryApp
     class Program
     {
         static List<Book> books = new List<Book>();
+        static List<Book> cart = new List<Book>();
 
         static void Main(string[] args)
         {
@@ -69,6 +70,7 @@ namespace LibraryApp
                 Console.WriteLine("5 - Показать самую дорогую и самую дешевую книгу");
                 Console.WriteLine("6 - Группировать книги по авторам");
                 Console.WriteLine("7 - Пакетный импорт");
+                Console.WriteLine("8 - Корзина");
                 Console.WriteLine("0 - Выход");
 
                 Console.Write("Введите номер команды: ");
@@ -96,6 +98,9 @@ namespace LibraryApp
                         break;
                     case "7":
                         BatchImport();
+                        break;
+                    case "8":
+                        AddToCart();
                         break;
                     case "0":
                         Console.WriteLine("Спасибо за использование программы. До свидания!");
@@ -393,6 +398,55 @@ namespace LibraryApp
                 addedCount++;
             }
             Console.WriteLine($"Пакетный импорт завершён. Добавлено книг: {addedCount}");
+        }
+        static void AddToCart()
+        {
+            Console.Write("\nВведите ID книги для добавления в корзину: ");
+            if (int.TryParse(Console.ReadLine(), out int id))
+            {
+                Book book = books.FirstOrDefault(b => b.Id == id);
+                if (book != null)
+                {
+                    cart.Add(book);
+                    Console.WriteLine($"Книга '{book.Title}' добавлена в корзину.");
+                    ShowCart(); // вывод корзины сразу после добавления
+                }
+                else
+                {
+                    Console.WriteLine($"Книга с ID {id} не найдена.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Некорректный ввод ID.");
+            }
+        }
+
+        static void ShowCart()
+        {
+            Console.WriteLine("\nСодержимое корзины:");
+            if (!cart.Any())
+            {
+                Console.WriteLine("Корзина пуста.");
+                return;
+            }
+
+            var grouped = cart.GroupBy(b => b.Id).Select(g => new
+                                                              {
+                                                                  Book = g.First(),
+                                                                  Count = g.Count()
+                                                              });
+
+            decimal total = 0;
+
+            foreach (var item in grouped)
+            {
+                decimal sumPrice = item.Book.Price * item.Count;
+                total += sumPrice;
+                Console.WriteLine($"ID: {item.Book.Id} | Название: {item.Book.Title} | Автор: {item.Book.Author} | Кол-во: {item.Count} | Цена за шт: {item.Book.Price:C} | Сумма: {sumPrice:C}");
+            }
+
+            Console.WriteLine($"Общая стоимость корзины: {total:C}");
         }
     }
 }
