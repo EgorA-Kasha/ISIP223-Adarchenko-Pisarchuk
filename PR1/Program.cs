@@ -68,6 +68,7 @@ namespace LibraryApp
                 Console.WriteLine("4 - Отсортировать книги");
                 Console.WriteLine("5 - Показать самую дорогую и самую дешевую книгу");
                 Console.WriteLine("6 - Группировать книги по авторам");
+                Console.WriteLine("7 - Пакетный импорт");
                 Console.WriteLine("0 - Выход");
 
                 Console.Write("Введите номер команды: ");
@@ -92,6 +93,9 @@ namespace LibraryApp
                         break;
                     case "6":
                         GroupByAuthors();
+                        break;
+                    case "7":
+                        BatchImport();
                         break;
                     case "0":
                         Console.WriteLine("Спасибо за использование программы. До свидания!");
@@ -331,6 +335,64 @@ namespace LibraryApp
                     Console.WriteLine("Некорректный ввод. Попробуйте снова.");
                 }
             }
+        }
+        static void BatchImport()
+        {
+            Console.WriteLine("\nВведите книги для пакетного импорта в формате:");
+            Console.WriteLine("Название;Автор;Жанр;Год;Цена");
+            Console.WriteLine("Введите пустую строку для завершения ввода.");
+
+            int addedCount = 0;
+            while (true)
+            {
+                Console.Write("Введите книгу: ");
+                string line = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(line))
+                    break;
+
+                string[] parts = line.Split(';');
+                if (parts.Length != 5)
+                {
+                    Console.WriteLine("Ошибка: неверное количество параметров. Ожидается 5 через ';'");
+                    break;
+                }
+
+                string title = parts[0].Trim();
+                string author = parts[1].Trim();
+                string genreStr = parts[2].Trim();
+                string yearStr = parts[3].Trim();
+                string priceStr = parts[4].Trim();
+
+                if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(author))
+                {
+                    Console.WriteLine("Ошибка: название и автор не могут быть пустыми.");
+                    break;
+                }
+
+                if (!Enum.TryParse<Genre>(genreStr, true, out Genre genre))
+                {
+                    Console.WriteLine($"Ошибка: жанр '{genreStr}' не распознан. Доступные жанры:");
+                    foreach (var g in Enum.GetNames(typeof(Genre)))
+                        Console.WriteLine($"- {g}");
+                    break;
+                }
+
+                if (!int.TryParse(yearStr, out int year) || year < 1 || year > DateTime.Now.Year)
+                {
+                    Console.WriteLine("Ошибка: год должен быть числом от 1 до текущего года.");
+                    break;
+                }
+
+                if (!decimal.TryParse(priceStr, out decimal price) || price <= 0)
+                {
+                    Console.WriteLine("Ошибка: цена должна быть положительным числом.");
+                    break;
+                }
+
+                books.Add(new Book(title, author, genre, year, price));
+                addedCount++;
+            }
+            Console.WriteLine($"Пакетный импорт завершён. Добавлено книг: {addedCount}");
         }
     }
 }
