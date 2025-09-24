@@ -1,431 +1,336 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
-class Product
+namespace LibraryApp
 {
-    public string Code { get; set; }
-    public string Name { get; set; }
-    public double Price { get; set; }
-    public int Quantity { get; set; }
-    public bool InStock { get; set; }
-    public string Category { get; set; }
-
-    public Product(string name, double price, int quantity, string category)
+    enum Genre
     {
-        Name = name;
-        Price = price;
-        Quantity = quantity;
-        Category = category;
-        InStock = quantity > 0;
+        Fiction = 1,
+        NonFiction,
+        ScienceFiction,
+        Fantasy,
+        Biography
     }
 
-    public void UpdateStock()
+    class Book
     {
-        InStock = Quantity > 0;
-    }
+        private static int _idCounter = 1;
 
+        public int Id { get; }
+        public string Title { get; set; }
+        public string Author { get; set; }
+        public Genre Genre { get; set; }
+        public int Year { get; set; }
+        public decimal Price { get; set; }
 
-
-    public override string ToString()
-    {
-        return $"Код: {Code}\nНазвание: {Name}\nЦена: {Price:C}\nКоличество: {Quantity}\nНа складе: {(InStock ? "Да" : "Нет")}\nКатегория: {Category}\n";
-    }
-}
-
-class Program
-{
-    static List<Product> products = new List<Product>();
-    static List<string> categories = new List<string> { "Электроника", "Одежда", "Продукты" };
-
-    static Random random = new Random();
-
-    static Stack<SaleRecord> salesHistory = new Stack<SaleRecord>();
-
-    class SaleRecord
-    {
-        public string ProductCode { get; }
-        public string ProductName { get; }
-        public int QuantitySold { get; }
-        public double TotalPrice { get; }
-
-        public SaleRecord(string code, string name, int quantity, double totalPrice)
+        public Book(string title, string author, Genre genre, int year, decimal price)
         {
-            ProductCode = code;
-            ProductName = name;
-            QuantitySold = quantity;
-            TotalPrice = totalPrice;
+            Id = _idCounter++;
+            Title = title;
+            Author = author;
+            Genre = genre;
+            Year = year;
+            Price = price;
+        }
+
+        public override string ToString()
+        {
+            return $"ID: {Id}\n" +
+                   $"Название: {Title}\n" +
+                   $"Автор: {Author}\n" +
+                   $"Жанр: {Genre}\n" +
+                   $"Год издания: {Year}\n" +
+                   $"Цена: {Price:C}\n";
         }
     }
 
-    static void Main(string[] args)
+    class Program
     {
-        while (true)
-        {
-            Console.Clear();
-            Console.WriteLine("Меню управления товарами:");
-            Console.WriteLine("1. Добавить товар");
-            Console.WriteLine("2. Удалить товар");
-            Console.WriteLine("3. Заказать поставку товара");
-            Console.WriteLine("4. Продать товар");
-            Console.WriteLine("5. Поиск товаров");
-            Console.WriteLine("6. Отменить последнюю продажу");
-            Console.WriteLine("7. Получить отчёт о продажах");
-            Console.WriteLine("8. Выход");
-            Console.Write("Выберите опцию: ");
+        static List<Book> books = new List<Book>();
 
-            string choice = Console.ReadLine();
-            switch (choice)
+        static void Main(string[] args)
+        {
+            // Добавляем 5 тестовых книг
+            books.Add(new Book("Мастер и Маргарита", "Михаил Булгаков",    Genre.Fiction, 1967, 500));
+            books.Add(new Book("Краткая история времени", "Стивен Хокинг", Genre.NonFiction, 1988, 700));
+            books.Add(new Book("Властелин колец", "Дж. Р. Р. Толкин",      Genre.Fantasy, 1954, 1200));
+            books.Add(new Book("1984", "Джордж Оруэлл",                    Genre.ScienceFiction, 1949, 450));
+            books.Add(new Book("Стив Джобс", "Уолтер Айзексон",            Genre.Biography, 2011, 800));
+
+            Console.WriteLine("Добро пожаловать в библиотеку!");
+            while (true)
             {
-                case "1":
-                    AddProduct();
-                    break;
-                case "2":
-                    RemoveProduct();
-                    break;
-                case "3":
-                    OrderSupply();
-                    break;
-                case "4":
-                    SellProduct();
-                    break;
-                case "5":
-                    SearchProducts();
-                    break;
-                case "6":
-                    UndoLastSale();
-                    break;
-                case "7":
-                    ShowSalesReport();
-                    break;
-                case "8":
-                    return;
-                default:
-                    Console.WriteLine("Неверный выбор. Нажмите Enter для продолжения.");
-                    Console.ReadLine();
-                    break;
-            }
-        }
-    }
+                Console.WriteLine("\nДоступные команды:");
+                Console.WriteLine("1 - Добавить книгу");
+                Console.WriteLine("2 - Удалить книгу по ID");
+                Console.WriteLine("3 - Найти книги");
+                Console.WriteLine("4 - Отсортировать книги");
+                Console.WriteLine("5 - Показать самую дорогую и самую дешевую книгу");
+                Console.WriteLine("6 - Группировать книги по авторам");
+                Console.WriteLine("0 - Выход");
 
-    static void AddProduct()
-    {
-        Console.Clear();
-        Console.WriteLine("Добавление товара:");
+                Console.Write("Введите номер команды: ");
+                string input = Console.ReadLine();
 
-        // запрос кода с коррекцией (добавляем "1" в начало если не начинается с "1")
-        string code;
-        while (true)
-        {
-            Console.Write("Код товара (введите цифры): ");
-            string inputCode = Console.ReadLine().Trim();
-
-            // убираем не цифры
-            inputCode = new string(inputCode.Where(char.IsDigit).ToArray());
-
-            if (string.IsNullOrEmpty(inputCode))
-            {
-                Console.WriteLine("Код не может быть пустым. Введите цифры.");
-                continue;
-            }
-
-            // если не начинается с "1" добавляем "1" в начало
-            if (!inputCode.StartsWith("1"))
-            {
-                inputCode = "1" + inputCode;
-            }
-
-            // если длина > 6 обрезаем до 6
-            if (inputCode.Length > 6)
-            {
-                Console.WriteLine("Код слишком длинный. Он будет обрезан до 6 цифр.");
-                inputCode = inputCode.Substring(0, 6);
-            }
-
-            // если длина < 6 дополняем случайными цифрами
-            while (inputCode.Length < 6)
-            {
-                inputCode += random.Next(0, 10).ToString();
-            }
-
-            code = inputCode;
-
-            // проверяем уникальность
-            if (products.Any(p => p.Code == code))
-            {
-                Console.WriteLine("Этот код уже используется. Введите другой код.");
-                continue;
-            }
-            break;
-        }
-
-        Console.Write("Название: ");
-        string name = Console.ReadLine();
-
-        Console.Write("Цена: ");
-        double price;
-        while (!double.TryParse(Console.ReadLine(), out price) || price < 0)
-        {
-            Console.Write("Введите корректную цену: ");
-        }
-
-        Console.Write("Количество: ");
-        int quantity;
-        while (!int.TryParse(Console.ReadLine(), out quantity) || quantity < 0)
-        {
-            Console.Write("Введите корректное количество: ");
-        }
-
-        string category;
-        while (true)
-        {
-            Console.WriteLine("Категории:");
-            for (int i = 0; i < categories.Count; i++)
-            {
-                Console.WriteLine($"{i + 1}. {categories[i]}");
-            }
-            Console.Write("Выберите категорию (номер): ");
-            string catInput = Console.ReadLine();
-            if (int.TryParse(catInput, out int catIndex) && catIndex >= 1 && catIndex <= categories.Count)
-            {
-                category = categories[catIndex - 1];
-                break;
-            }
-            else
-            {
-                Console.WriteLine("Неверный выбор. Выберите номер из списка.");
-            }
-        }
-
-        Product product = new Product(name, price, quantity, category);
-        product.Code = code;
-        products.Add(product);
-
-        Console.WriteLine($"Товар добавлен! Нажмите Enter для продолжения.");
-        Console.ReadLine();
-    }
-
-    static void RemoveProduct()
-    {
-        Console.Clear();
-        Console.Write("Введите код товара для удаления: ");
-        string code = Console.ReadLine();
-        Product product = products.FirstOrDefault(p => p.Code == code);
-        if (product != null)
-        {
-            products.Remove(product);
-            Console.WriteLine("Товар удалён! Нажмите Enter для продолжения.");
-        }
-        else
-        {
-            Console.WriteLine("Товар не найден. Нажмите Enter для продолжения.");
-        }
-        Console.ReadLine();
-    }
-
-    static void OrderSupply()
-    {
-        Console.Clear();
-        Console.Write("Введите код товара для поставки: ");
-        string code = Console.ReadLine();
-        Product product = products.FirstOrDefault(p => p.Code == code);
-        if (product != null)
-        {
-            Console.Write("Количество для поставки: ");
-            int supply;
-            while (!int.TryParse(Console.ReadLine(), out supply) || supply <= 0)
-            {
-                Console.Write("Введите корректное количество: ");
-            }
-            product.Quantity += supply;
-            product.UpdateStock();
-            Console.WriteLine("Поставка выполнена! Нажмите Enter для продолжения.");
-        }
-        else
-        {
-            Console.WriteLine("Товар не найден. Нажмите Enter для продолжения.");
-        }
-        Console.ReadLine();
-    }
-
-    static void SellProduct()
-    {
-        Console.Clear();
-        Console.WriteLine("Продажа товара:");
-
-        Console.Write("Введите код товара для продажи: ");
-        string code = Console.ReadLine();
-
-        Product product = products.FirstOrDefault(p => p.Code == code);
-
-        if (product == null)
-        {
-            Console.WriteLine("Товар с таким кодом не найден.");
-        }
-        else if (product.Quantity == 0)
-        {
-            Console.WriteLine("Ошибка: товар отсутствует на складе и не может быть продан.");
-        }
-        else
-        {
-            Console.Write("Введите количество для продажи: ");
-            if (int.TryParse(Console.ReadLine(), out int sellQuantity))
-            {
-                if (sellQuantity <= 0)
+                switch (input)
                 {
-                    Console.WriteLine("Количество для продажи должно быть положительным числом.");
+                    case "1":
+                        AddBook();
+                        break;
+                    case "2":
+                        DeleteBook();
+                        break;
+                    case "3":
+                        FindBooks();
+                        break;
+                    case "4":
+                        SortBooks();
+                        break;
+                    case "5":
+                        ShowPriceExtremes();
+                        break;
+                    case "6":
+                        GroupByAuthors();
+                        break;
+                    case "0":
+                        Console.WriteLine("Спасибо за использование программы. До свидания!");
+                        return;
+                    default:
+                        Console.WriteLine("Неизвестная команда. Попробуйте снова.");
+                        break;
                 }
-                else if (sellQuantity > product.Quantity)
+            }
+        }
+
+        static void AddBook()
+        {
+            Console.WriteLine("\nДобавление новой книги:");
+
+            string title = ReadNonEmptyString("Введите название книги: ");
+            string author = ReadNonEmptyString("Введите автора книги: ");
+
+            Genre genre = ReadGenre();
+
+            int year = ReadInt("Введите год издания (например, 1999): ", 1, DateTime.Now.Year);
+
+            decimal price = ReadDecimal("Введите цену книги (положительное число): ", 0.01m, decimal.MaxValue);
+
+            Book newBook = new Book(title, author, genre, year, price);
+            books.Add(newBook);
+            Console.WriteLine("\nКнига успешно добавлена:");
+            Console.WriteLine(newBook);
+        }
+
+        static void DeleteBook()
+        {
+            Console.Write("\nВведите ID книги для удаления: ");
+            if (int.TryParse(Console.ReadLine(), out int id))
+            {
+                Book bookToRemove = books.FirstOrDefault(b => b.Id == id);
+                if (bookToRemove != null)
                 {
-                    Console.WriteLine($"Ошибка: на складе недостаточно товара. Доступно: {product.Quantity}.");
+                    books.Remove(bookToRemove);
+                    Console.WriteLine($"Книга с ID {id} удалена.");
                 }
                 else
                 {
-                    double totalPrice = sellQuantity * product.Price;
-
-                    product.Quantity -= sellQuantity;
-                    product.UpdateStock();
-
-                    // записываем продажу в историю
-                    salesHistory.Push(new SaleRecord(product.Code, product.Name, sellQuantity, totalPrice));
-
-                    Console.WriteLine($"Продано {sellQuantity} единиц товара \"{product.Name}\" на сумму {totalPrice:C}.");
+                    Console.WriteLine($"Книга с ID {id} не найдена.");
                 }
             }
             else
             {
-                Console.WriteLine("Введено некорректное количество.");
+                Console.WriteLine("Некорректный ввод ID.");
             }
         }
 
-        Console.WriteLine("Нажмите Enter для продолжения.");
-        Console.ReadLine();
-    }
-
-    static void SearchProducts()
-    {
-        Console.Clear();
-        Console.WriteLine("Поиск товаров:");
-        Console.WriteLine("1. По коду");
-        Console.WriteLine("2. По названию");
-        Console.WriteLine("3. По категории");
-        Console.Write("Выберите тип поиска: ");
-        string searchType = Console.ReadLine();
-
-        List<Product> results = new List<Product>();
-
-        switch (searchType)
+        static void FindBooks()
         {
-            case "1":
-                Console.Write("Введите код: ");
-                string code = Console.ReadLine();
-                results = products.Where(p => p.Code == code).ToList();
-                break;
-            case "2":
-                Console.Write("Введите название: ");
-                string name = Console.ReadLine();
-                results = products.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase)).ToList();
-                break;
-            case "3":
-                Console.WriteLine("Категории:");
-                for (int i = 0; i < categories.Count; i++)
+            Console.WriteLine("\nПоиск книг. Выберите параметр поиска:");
+            Console.WriteLine("1 - По названию");
+            Console.WriteLine("2 - По автору");
+            Console.WriteLine("3 - По жанру");
+
+            Console.Write("Введите номер параметра: ");
+            string choice = Console.ReadLine();
+
+            IEnumerable<Book> foundBooks = Enumerable.Empty<Book>();
+
+            switch (choice)
+            {
+                case "1":
+                    string title = ReadNonEmptyString("Введите название для поиска: ").ToLower();
+                    foundBooks = books.Where(b => b.Title.ToLower().Contains(title));
+                    break;
+                case "2":
+                    string author = ReadNonEmptyString("Введите автора для поиска: ").ToLower();
+                    foundBooks = books.Where(b => b.Author.ToLower().Contains(author));
+                    break;
+                case "3":
+                    Genre genre = ReadGenre();
+                    foundBooks = books.Where(b => b.Genre == genre);
+                    break;
+                default:
+                    Console.WriteLine("Некорректный выбор параметра поиска.");
+                    return;
+            }
+
+            if (foundBooks.Any())
+            {
+                Console.WriteLine($"\nНайдено книг: {foundBooks.Count()}");
+                foreach (var book in foundBooks)
                 {
-                    Console.WriteLine($"{i + 1}. {categories[i]}");
+                    Console.WriteLine(book);
                 }
-                Console.Write("Выберите категорию (номер): ");
-                int catIndex;
-                while (!int.TryParse(Console.ReadLine(), out catIndex) || catIndex < 1 || catIndex > categories.Count)
-                {
-                    Console.Write("Введите корректный номер категории: ");
-                }
-                string category = categories[catIndex - 1];
-                results = products.Where(p => p.Category == category).ToList();
-                break;
-            default:
-                Console.WriteLine("Неверный выбор.");
-                Console.ReadLine();
+            }
+            else
+            {
+                Console.WriteLine("Книги по заданным параметрам не найдены.");
+            }
+        }
+
+        static void SortBooks()
+        {
+            Console.WriteLine("\nСортировка книг. Выберите параметр сортировки:");
+            Console.WriteLine("1 - По названию (по алфавиту)");
+            Console.WriteLine("2 - По году издания (по возрастанию)");
+
+            Console.Write("Введите номер параметра: ");
+            string choice = Console.ReadLine();
+
+            IEnumerable<Book> sortedBooks = Enumerable.Empty<Book>();
+
+            switch (choice)
+            {
+                case "1":
+                    sortedBooks = books.OrderBy(b => b.Title);
+                    break;
+                case "2":
+                    sortedBooks = books.OrderBy(b => b.Year);
+                    break;
+                default:
+                    Console.WriteLine("Некорректный выбор параметра сортировки.");
+                    return;
+            }
+
+            Console.WriteLine("\nОтсортированные книги:");
+            foreach (var book in sortedBooks)
+            {
+                Console.WriteLine(book);
+            }
+        }
+
+        static void ShowPriceExtremes()
+        {
+            if (!books.Any())
+            {
+                Console.WriteLine("Список книг пуст.");
                 return;
-        }
-
-        if (results.Count > 0)
-        {
-            foreach (var product in results)
-            {
-                Console.WriteLine(product);
             }
-        }
-        else
-        {
-            Console.WriteLine("Товары не найдены.");
-        }
 
-        Console.WriteLine("Нажмите Enter для продолжения.");
-        Console.ReadLine();
-    }
+            var mostExpensive = books.OrderByDescending(b => b.Price).First();
+            var cheapest = books.OrderBy(b => b.Price).First();
 
-    static void UndoLastSale()
-    {
-        Console.Clear();
-        if (salesHistory.Count == 0)
-        {
-            Console.WriteLine("Нет продаж для отмены.");
+            Console.WriteLine("\nСамая дорогая книга:");
+            Console.WriteLine(mostExpensive);
+
+            Console.WriteLine("Самая дешевая книга:");
+            Console.WriteLine(cheapest);
         }
-        else
+        static void GroupByAuthors()
         {
-            SaleRecord lastSale = salesHistory.Pop();
-
-            Product product = products.FirstOrDefault(p => p.Code == lastSale.ProductCode);
-            if (product != null)
+            if (!books.Any())
             {
-                product.Quantity += lastSale.QuantitySold;
-                product.UpdateStock();
-
-                Console.WriteLine($"Отмена последней продажи: товар \"{product.Name}\", количество {lastSale.QuantitySold} возвращено на склад.");
+                Console.WriteLine("Список книг пуст.");
+                return;
             }
-            else
+
+            var groups = books.GroupBy(b => b.Author)
+                              .Select(g => new { Author = g.Key, Count = g.Count() })
+                              .OrderByDescending(g => g.Count);
+
+            Console.WriteLine("\nКоличество книг по авторам:");
+            foreach (var group in groups)
             {
-                Console.WriteLine("Ошибка: товар из истории продаж не найден в базе.");
+                Console.WriteLine($"Автор: {group.Author}, Количество книг: {group.Count}");
             }
         }
 
-        Console.WriteLine("Нажмите Enter для продолжения.");
-        Console.ReadLine();
-    }
-
-    static void ShowSalesReport()
-    {
-        Console.Clear();
-        if (salesHistory.Count == 0)
+        static string ReadNonEmptyString(string prompt)
         {
-            Console.WriteLine("Продаж пока не было.");
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine()?.Trim();
+                if (!string.IsNullOrEmpty(input))
+                    return input;
+                Console.WriteLine("Ввод не может быть пустым. Попробуйте снова.");
+            }
         }
-        else
+
+        static int ReadInt(string prompt, int min, int max)
         {
-            // группируем продажи по коду и имени товара
-            var groupedSales = salesHistory
-                .GroupBy(s => new { s.ProductCode, s.ProductName })
-                .Select(g => new
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine();
+                if (int.TryParse(input, out int value))
                 {
-                    ProductCode = g.Key.ProductCode,
-                    ProductName = g.Key.ProductName,
-                    TotalQuantity = g.Sum(s => s.QuantitySold),
-                    TotalSum = g.Sum(s => s.TotalPrice)
-                })
-                .ToList();
-
-            double grandTotal = groupedSales.Sum(s => s.TotalSum);
-
-            Console.WriteLine("Отчёт о продажах:");
-            Console.WriteLine("Код\tНазвание\tКоличество\tСумма");
-
-            foreach (var item in groupedSales)
-            {
-                Console.WriteLine($"{item.ProductCode}\t{item.ProductName}\t{item.TotalQuantity}\t\t{item.TotalSum:C}");
+                    if (value >= min && value <= max)
+                        return value;
+                    else
+                        Console.WriteLine($"Значение должно быть в диапазоне от {min} до {max}.");
+                }
+                else
+                {
+                    Console.WriteLine("Некорректный ввод. Введите целое число.");
+                }
             }
-
-            Console.WriteLine("---------------------------------------------");
-            Console.WriteLine($"Общая сумма продаж: {grandTotal:C}");
         }
 
-        Console.WriteLine("Нажмите Enter для продолжения.");
-        Console.ReadLine();
+        static decimal ReadDecimal(string prompt, decimal min, decimal max)
+        {
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine();
+                if (decimal.TryParse(input, out decimal value))
+                {
+                    if (value >= min && value <= max)
+                        return value;
+                    else
+                        Console.WriteLine($"Значение должно быть в диапазоне от {min} до {max}.");
+                }
+                else
+                {
+                    Console.WriteLine("Некорректный ввод. Введите число.");
+                }
+            }
+        }
+
+        static Genre ReadGenre()
+        {
+            Console.WriteLine("Выберите жанр из списка:");
+
+            foreach (var val in Enum.GetValues(typeof(Genre)))
+            {
+                Console.WriteLine($"{(int)val} - {val}");
+            }
+
+            while (true)
+            {
+                Console.Write("Введите номер жанра: ");
+                string input = Console.ReadLine();
+                if (int.TryParse(input, out int genreNum) &&
+                    Enum.IsDefined(typeof(Genre), genreNum))
+                {
+                    return (Genre)genreNum;
+                }
+                else
+                {
+                    Console.WriteLine("Некорректный ввод. Попробуйте снова.");
+                }
+            }
+        }
     }
 }
