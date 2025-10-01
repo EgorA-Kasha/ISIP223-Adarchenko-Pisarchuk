@@ -4,248 +4,495 @@ using System.Linq;
 
 namespace UniversityManagementSystem
 {
-    // абстрактный базовый класс для людей (абстракция и наследование)
+    // абстрактный класс для человека
     public abstract class Person
     {
-        private static int _nextId = 1; // статический счетчик для ID
-        private int _id;
-        private string _firstName;
-        private string _lastName;
-        private string _middleName;
-        private int _age;
+        private static int nextId = 1;
+        private int id;
+        private string fName;
+        private string lName;
+        private string mName;
+        private int age;
 
-        public Person(string firstName, string lastName, int age, string middleName = null)
-        {
-            _id = _nextId++;
-            _firstName = firstName;
-            _lastName = lastName;
-            _age = age;
-            _middleName = middleName;
-        }
+        public int Id => id;
 
-        // инкапсуляция: приватные поля, публичные свойства
-        public int Id => _id;
         public string FirstName
         {
-            get => _firstName;
-            set => _firstName = value;
+            get => fName;
+            set => fName = value;
         }
+
         public string LastName
         {
-            get => _lastName;
-            set => _lastName = value;
+            get => lName;
+            set => lName = value;
         }
+
         public string MiddleName
         {
-            get => _middleName;
-            set => _middleName = value;
+            get => mName;
+            set => mName = value;
         }
+
         public int Age
         {
-            get => _age;
-            set => _age = value;
+            get => age;
+            set => age = value;
         }
 
-        // Свойство для полного имени
-        public string FullName
+        public string FullName => string.IsNullOrEmpty(mName) ? $"{lName} {fName}" : $"{lName} {fName} {mName}";
+
+        public Person(string fName, string lName, int age, string mName = null)
         {
-            get
+            if (string.IsNullOrWhiteSpace(fName))
             {
-                if (string.IsNullOrEmpty(_middleName))
-                {
-                    return $"{_lastName} {_firstName}";
-                }
-                else
-                {
-                    return $"{_lastName} {_firstName} {_middleName}";
-                }
+                throw new ArgumentException("Имя не может быть пустым.");
             }
+            if (string.IsNullOrWhiteSpace(lName))
+            {
+                throw new ArgumentException("Фамилия не может быть пустой.");
+            }
+            if (age < 18 || age > 100)
+            {
+                throw new ArgumentException("Возраст должен быть от 18 до 100 лет.");
+            }
+            id = nextId++;
+            this.fName = fName;
+            this.lName = lName;
+            this.age = age;
+            this.mName = mName;
         }
 
-        // полиморфизм, абстрактный метод для отображения информации
+        // абстрактный метод для отображения информации
         public abstract void DisplayInfo();
     }
 
-    // класс студент (наследование)
-    public class Student : Person
-    {
-        private List<Course> _enrolledCourses;
-
-        public Student(string firstName, string lastName, int age, string middleName = null) : base(firstName, lastName, age, middleName)
-        {
-            _enrolledCourses = new List<Course>();
-        }
-
-        public List<Course> EnrolledCourses => _enrolledCourses;
-
-        public void EnrollInCourse(Course course)
-        {
-            if (!_enrolledCourses.Contains(course))
-            {
-                _enrolledCourses.Add(course);
-                course.AddStudent(this);
-            }
-        }
-
-        // полиморфизм
-        public override void DisplayInfo()
-        {
-            Console.WriteLine($"ID: {Id}, Имя: {FullName}, Возраст: {Age}, Тип: Студент");
-        }
-    }
-
-    // класс преподаватель (наследование)
-    public class Teacher : Person
-    {
-        private List<Course> _taughtCourses;
-
-        public Teacher(string firstName, string lastName, int age, string middleName = null) : base(firstName, lastName, age, middleName)
-        {
-            _taughtCourses = new List<Course>();
-        }
-
-        public List<Course> TaughtCourses => _taughtCourses;
-
-        public void AssignToCourse(Course course)
-        {
-            if (!_taughtCourses.Contains(course))
-            {
-                _taughtCourses.Add(course);
-                course.Teacher = this;
-            }
-        }
-
-        // полиморфизм
-        public override void DisplayInfo()
-        {
-            Console.WriteLine($"ID: {Id}, Имя: {FullName}, Возраст: {Age}, Тип: Преподаватель");
-        }
-    }
-
-    // Класс Курс
     public class Course
     {
-        private static int _nextId = 1;
-        private int _id;
-        private string _name;
-        private string _description;
-        private Teacher _teacher;
-        private List<Student> _students;
+        private string name;
+        private Teacher teacher;
+        private List<Student> students;
 
-        public Course(string name, string description)
-        {
-            _id = _nextId++;
-            _name = name;
-            _description = description;
-            _students = new List<Student>();
-        }
-
-        public int Id => _id;
         public string Name
         {
-            get => _name;
-            set => _name = value;
+            get => name;
+            set => name = value;
         }
-        public string Description
-        {
-            get => _description;
-            set => _description = value;
-        }
+
         public Teacher Teacher
         {
-            get => _teacher;
-            set => _teacher = value;
+            get => teacher;
+            set => teacher = value;
         }
-        public List<Student> Students => _students;
 
-        public void AddStudent(Student student)
+        public List<Student> Students => students;
+
+        public Course(string name)
         {
-            if (!_students.Contains(student))
-            {
-                _students.Add(student);
-            }
+            this.name = name;
+            students = new List<Student>();
         }
 
+        // добавления студентов на курс (не более 20 студентов)
+        public bool AddStudent(Student student)
+        {
+            if (students.Count < 20 && !students.Contains(student))
+            {
+                students.Add(student);
+                return true;
+            }
+            return false;
+        }
+
+        // назначение преподавателя на курс (не более 1 преподавателя)
+        public bool AssignTeacher(Teacher teacher)
+        {
+            if (this.teacher == null)
+            {
+                this.teacher = teacher;
+                return true;
+            }
+            return false;
+        }
+
+        //отображение информации о курсе
         public void DisplayInfo()
         {
-            Console.WriteLine($"ID: {Id}, Название: {Name}, Описание: {Description}, Преподаватель: {(Teacher != null ? Teacher.FullName : "Не назначен")}");
+            Console.WriteLine($"Курс: {name}");
+            Console.WriteLine($"Преподаватель: {(teacher != null ? teacher.FullName : "Не назначен")}");
+            Console.WriteLine($"Количество студентов: {students.Count}/20");
+            if (students.Count > 0)
+            {
+                Console.WriteLine("Студенты:");
+                foreach (var student in students)
+                {
+                    Console.WriteLine($"- {student.FullName}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Студенты: Нет записанных студентов\n");
+            }
         }
     }
 
-    // класс для управления университетом
-    public class UniversityManager
+    public class Student : Person
     {
-        private List<Student> _students;
-        private List<Teacher> _teachers;
-        private List<Course> _courses;
+        private List<Course> courses;
+        private Dictionary<Course, List<int>> grades;
 
-        public UniversityManager()
+        public List<Course> Courses => courses;
+
+        public Dictionary<Course, List<int>> Grades => grades;
+
+        public double AverageGrade
         {
-            _students = new List<Student>();
-            _teachers = new List<Teacher>();
-            _courses = new List<Course>();
+            get
+            {
+                if (grades.Values.Sum(list => list.Count) == 0) return 0;
+                // 21 считается как 1 при расчёте среднего
+                return grades.Values.SelectMany(list => list.Select(g => g == 21 ? 1 : g)).Average();
+            }
+        }
+
+        public Student(string fName, string lName, int age, string mName = null)
+            : base(fName, lName, age, mName)
+        {
+            courses = new List<Course>();
+            grades = new Dictionary<Course, List<int>>();
+        }
+
+        // запись студента на курс
+        public bool Enroll(Course course)
+        {
+            if (!courses.Contains(course) && course.AddStudent(this))
+            {
+                courses.Add(course);
+                grades[course] = new List<int>();
+                return true;
+            }
+            return false;
+        }
+
+        // добавление оценки по курсу
+        public void AddGrade(Course course, int grade)
+        {
+            if (grades.ContainsKey(course))
+            {
+                grades[course].Add(grade);
+            }
+        }
+
+        // переопределенный метод для студентов
+        public override void DisplayInfo()
+        {
+            Console.WriteLine($"ID: {Id}, Имя: {FullName}, Возраст: {Age}, Тип: Студент, Средний балл: {AverageGrade:F2}");
+            if (grades.Any())
+            {
+                Console.WriteLine("Оценки по курсам:");
+                foreach (var kvp in grades)
+                {
+                    string gradesStr = kvp.Value.Any() ? string.Join(", ", kvp.Value) : "Нет оценок";
+                    Console.WriteLine($"- {kvp.Key.Name}: {gradesStr}");
+                }
+            }
+            Console.WriteLine();
+        }
+    }
+
+    public class Teacher : Person
+    {
+        private List<Course> courses;
+
+        public List<Course> Courses => courses;
+
+        public Teacher(string fName, string lName, int age, string mName = null)
+            : base(fName, lName, age, mName)
+        {
+            courses = new List<Course>();
+        }
+
+        public bool Assign(Course course)
+        {
+            if (!courses.Contains(course) && course.AssignTeacher(this))
+            {
+                courses.Add(course);
+                return true;
+            }
+            return false;
+        }
+
+        // переопределенный метод для преподавателей
+        public override void DisplayInfo()
+        {
+            Console.WriteLine($"ID: {Id}, Имя: {FullName}, Возраст: {Age}, Тип: Преподаватель, Количество курсов: {courses.Count}");
+            Console.WriteLine();
+        }
+    }
+
+    public class University
+    {
+        private List<Student> students;
+        private List<Teacher> teachers;
+        private List<Course> courses;
+
+        public List<Student> Students => students;
+
+        public List<Teacher> Teachers => teachers;
+
+        public List<Course> Courses => courses;
+
+        public University()
+        {
+            students = new List<Student>();
+            teachers = new List<Teacher>();
+            courses = new List<Course>();
         }
 
         public void AddStudent(Student student)
         {
-            _students.Add(student);
+            students.Add(student);
         }
 
         public void AddTeacher(Teacher teacher)
         {
-            _teachers.Add(teacher);
+            teachers.Add(teacher);
         }
 
         public void AddCourse(Course course)
         {
-            _courses.Add(course);
+            courses.Add(course);
         }
 
-        public Student GetStudentById(int id)
+        public void DisplayAllStudents()
         {
-            return _students.FirstOrDefault(s => s.Id == id);
+            Console.WriteLine("Студенты:");
+            foreach (var student in students)
+            {
+                student.DisplayInfo();
+            }
         }
 
-        public Teacher GetTeacherById(int id)
+        public void DisplayAllTeachers()
         {
-            return _teachers.FirstOrDefault(t => t.Id == id);
+            Console.WriteLine("Список преподавателей:");
+            foreach (var teacher in Teachers)
+            {
+                string coursesStr = teacher.Courses.Any()
+                    ? string.Join(", ", teacher.Courses.Select(c => c.Name))
+                    : "Нет";
+                Console.WriteLine($"Преподаватель: {teacher.FullName}, Возраст: {teacher.Age}, Отчество: {teacher.MiddleName ?? "Не указано"}, Назначенные курсы: {coursesStr}");
+            }
         }
 
-        public Course GetCourseById(int id)
+        public void DisplayAllCourses()
         {
-            return _courses.FirstOrDefault(c => c.Id == id);
+            Console.WriteLine("Курсы:");
+            foreach (var course in courses)
+            {
+                course.DisplayInfo();
+                Console.WriteLine();
+            }
         }
-
-        public List<Student> GetAllStudents() => _students;
-        public List<Teacher> GetAllTeachers() => _teachers;
-        public List<Course> GetAllCourses() => _courses;
     }
 
     class Program
     {
+        private static University university = new University();
+
+        // добавление студента
+        static void AddStudent()
+        {
+            Console.Write("Введите фамилию студента: ");
+            string lNameS = Console.ReadLine();
+            Console.Write("Введите имя студента: ");
+            string fNameS = Console.ReadLine();
+            Console.Write("Введите отчество студента (или оставьте пустым): ");
+            string mNameS = Console.ReadLine();
+            mNameS = string.IsNullOrEmpty(mNameS) ? null : mNameS;
+            Console.Write("Введите возраст студента: ");
+            if (!int.TryParse(Console.ReadLine(), out int ageS))
+            {
+                Console.WriteLine("Некорректный возраст. Возраст должен быть числом.\n");
+                return;
+            }
+            try
+            {
+                Student student = new Student(fNameS, lNameS, ageS, mNameS);
+                university.AddStudent(student);
+                Console.WriteLine("Студент добавлен!\n");
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Ошибка: {ex.Message}\n");
+            }
+        }
+
+        static void AddTeacher()
+        {
+            Console.Write("Введите фамилию преподавателя: ");
+            string lNameT = Console.ReadLine();
+            Console.Write("Введите имя преподавателя: ");
+            string fNameT = Console.ReadLine();
+            Console.Write("Введите отчество преподавателя (или оставьте пустым): ");
+            string mNameT = Console.ReadLine();
+            mNameT = string.IsNullOrEmpty(mNameT) ? null : mNameT;
+            Console.Write("Введите возраст преподавателя: ");
+            if (!int.TryParse(Console.ReadLine(), out int ageT))
+            {
+                Console.WriteLine("Некорректный возраст. Возраст должен быть числом.\n");
+                return;
+            }
+            try
+            {
+                Teacher teacher = new Teacher(fNameT, lNameT, ageT, mNameT);
+                university.AddTeacher(teacher);
+                Console.WriteLine("Преподаватель добавлен!\n");
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Ошибка: {ex.Message}\n");
+            }
+        }
+
+        static void AddCourse()
+        {
+            Console.Write("Введите название курса: ");
+            string courseName = Console.ReadLine();
+            Course course = new Course(courseName);
+            university.AddCourse(course);
+            Console.WriteLine("Курс добавлен!\n");
+        }
+
+        static void DisplayAllStudents()
+        {
+            university.DisplayAllStudents();
+        }
+
+        static void DisplayAllTeachers()
+        {
+            university.DisplayAllTeachers();
+        }
+
+        static void DisplayAllCourses()
+        {
+            university.DisplayAllCourses();
+        }
+
+        // запись студента на курс
+        static void EnrollStudent()
+        {
+            Console.Write("Введите ID студента: ");
+            int studentId = int.Parse(Console.ReadLine());
+            Student selectedStudent = university.Students.FirstOrDefault(s => s.Id == studentId);
+            if (selectedStudent == null)
+            {
+                Console.WriteLine("Студент с таким ID не найден.\n");
+                return;
+            }
+            Console.Write("Введите название курса: ");
+            string courseNameEnroll = Console.ReadLine();
+            Course selectedCourseEnroll = university.Courses.FirstOrDefault(c => c.Name == courseNameEnroll);
+            if (selectedCourseEnroll == null)
+            {
+                Console.WriteLine("Курс с таким названием не найден.\n");
+                return;
+            }
+            if (selectedStudent.Enroll(selectedCourseEnroll))
+            {
+                Console.WriteLine("Студент записан на курс!\n");
+            }
+            else
+            {
+                Console.WriteLine("Не удалось записать студента (курс полон или студент уже записан).\n");
+            }
+        }
+
+        // назначение преподавателя на курс
+        static void AssignTeacher()
+        {
+            Console.Write("Введите ID преподавателя: ");
+            int teacherId = int.Parse(Console.ReadLine());
+            Teacher selectedTeacher = university.Teachers.FirstOrDefault(t => t.Id == teacherId);
+            if (selectedTeacher == null)
+            {
+                Console.WriteLine("Преподаватель с таким ID не найден.\n");
+                return;
+            }
+            Console.Write("Введите название курса: ");
+            string courseNameAssign = Console.ReadLine();
+            Course selectedCourseAssign = university.Courses.FirstOrDefault(c => c.Name == courseNameAssign);
+            if (selectedCourseAssign == null)
+            {
+                Console.WriteLine("Курс с таким названием не найден.\n");
+                return;
+            }
+            if (selectedTeacher.Assign(selectedCourseAssign))
+            {
+                Console.WriteLine("Преподаватель назначен на курс!\n");
+            }
+            else
+            {
+                Console.WriteLine("Не удалось назначить преподавателя (преподаватель уже назначен на курс или курс уже имеет преподавателя).\n");
+            }
+        }
+
+        // добавление оценки студенту по курсу
+        static void AddGradeToStudent()
+        {
+            Console.Write("Введите ID студента: ");
+            int studentId = int.Parse(Console.ReadLine());
+            Student selectedStudent = university.Students.FirstOrDefault(s => s.Id == studentId);
+            if (selectedStudent == null)
+            {
+                Console.WriteLine("Студент с таким ID не найден.\n");
+                return;
+            }
+            Console.Write("Введите название курса: ");
+            string courseName = Console.ReadLine();
+            Course selectedCourse = university.Courses.FirstOrDefault(c => c.Name == courseName);
+            if (selectedCourse == null)
+            {
+                Console.WriteLine("Курс с таким названием не найден.\n");
+                return;
+            }
+            if (!selectedStudent.Courses.Contains(selectedCourse))
+            {
+                Console.WriteLine("Студент не записан на этот курс.\n");
+                return;
+            }
+            Console.Write("Введите оценку (1, 2, 3, 4, 5 или 21): ");
+            if (!int.TryParse(Console.ReadLine(), out int grade))
+            {
+                Console.WriteLine("Некорректная оценка. Оценка должна быть числом.\n");
+                return;
+            }
+            if (!new[] { 1, 2, 3, 4, 5, 21 }.Contains(grade))
+            {
+                Console.WriteLine("Недопустимая оценка. Допустимы только: 1, 2, 3, 4, 5, 21.\n");
+                return;
+            }
+            selectedStudent.AddGrade(selectedCourse, grade);
+            Console.WriteLine("Оценка добавлена!\n");
+        }
+
         static void Main(string[] args)
         {
-            UniversityManager manager = new UniversityManager();
             bool running = true;
 
             while (running)
             {
-                Console.Clear();
-                Console.WriteLine("=== Система КИП ФИН'ом ===");
+                Console.WriteLine("Управление sKIP:");
                 Console.WriteLine("1. Добавить студента");
-                Console.WriteLine("2. Просмотреть информацию о студенте");
-                Console.WriteLine("3. Записать студента на курс");
-                Console.WriteLine("4. Просмотреть курсы студента");
-                Console.WriteLine("5. Добавить преподавателя");
-                Console.WriteLine("6. Просмотреть информацию о преподавателе");
-                Console.WriteLine("7. Назначить преподавателя на курс");
-                Console.WriteLine("8. Создать курс");
-                Console.WriteLine("9. Просмотреть информацию о курсе");
-                Console.WriteLine("10. Просмотреть студентов на курсе");
-                Console.WriteLine("11. Вывести всех студентов");
-                Console.WriteLine("12. Вывести всех преподавателей");
-                Console.WriteLine("13. Вывести все курсы");
-                Console.WriteLine("14. Выход");
+                Console.WriteLine("2. Добавить преподавателя");
+                Console.WriteLine("3. Добавить курс");
+                Console.WriteLine("4. Отобразить всех студентов");
+                Console.WriteLine("5. Отобразить всех преподавателей");
+                Console.WriteLine("6. Отобразить все курсы");
+                Console.WriteLine("7. Записать студента на курс");
+                Console.WriteLine("8. Назначить преподавателя на курс");
+                Console.WriteLine("9. Добавить оценку студенту");
+                Console.WriteLine("10. Выход");
                 Console.Write("Выберите опцию: ");
 
                 string choice = Console.ReadLine();
@@ -253,268 +500,40 @@ namespace UniversityManagementSystem
                 switch (choice)
                 {
                     case "1":
-                        AddStudent(manager);
+                        AddStudent();
                         break;
                     case "2":
-                        ViewStudent(manager);
+                        AddTeacher();
                         break;
                     case "3":
-                        EnrollStudentInCourse(manager);
+                        AddCourse();
                         break;
                     case "4":
-                        ViewStudentCourses(manager);
+                        DisplayAllStudents();
                         break;
                     case "5":
-                        AddTeacher(manager);
+                        DisplayAllTeachers();
                         break;
                     case "6":
-                        ViewTeacher(manager);
+                        DisplayAllCourses();
                         break;
                     case "7":
-                        AssignTeacherToCourse(manager);
+                        EnrollStudent();
                         break;
                     case "8":
-                        CreateCourse(manager);
+                        AssignTeacher();
                         break;
                     case "9":
-                        ViewCourse(manager);
+                        AddGradeToStudent();
                         break;
                     case "10":
-                        ViewCourseStudents(manager);
-                        break;
-                    case "11":
-                        ListAllStudents(manager);
-                        break;
-                    case "12":
-                        ListAllTeachers(manager);
-                        break;
-                    case "13":
-                        ListAllCourses(manager);
-                        break;
-                    case "14":
                         running = false;
                         break;
                     default:
-                        Console.WriteLine("Неверный выбор. Нажмите любую клавишу для продолжения...");
-                        Console.ReadKey();
+                        Console.WriteLine("Неверный выбор. Попробуйте снова.\n");
                         break;
                 }
             }
-        }
-
-        static void AddStudent(UniversityManager manager)
-        {
-            Console.Write("Введите фамилию: ");
-            string lastName = Console.ReadLine();
-            Console.Write("Введите имя: ");
-            string firstName = Console.ReadLine();
-            Console.Write("Введите отчество (если имеется, иначе нажмите Enter): ");
-            string middleName = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(middleName))
-            {
-                middleName = null;
-            }
-            Console.Write("Введите возраст: ");
-            int age = int.Parse(Console.ReadLine());
-
-            Student student = new Student(firstName, lastName, age, middleName);
-            manager.AddStudent(student);
-            Console.WriteLine("Студент добавлен! Нажмите любую клавишу...");
-            Console.ReadKey();
-        }
-
-        static void ViewStudent(UniversityManager manager)
-        {
-            Console.Write("Введите ID студента: ");
-            int id = int.Parse(Console.ReadLine());
-            Student student = manager.GetStudentById(id);
-            if (student != null)
-            {
-                student.DisplayInfo();
-            }
-            else
-            {
-                Console.WriteLine("Студент не найден.");
-            }
-            Console.ReadKey();
-        }
-
-        static void EnrollStudentInCourse(UniversityManager manager)
-        {
-            Console.Write("Введите ID студента: ");
-            int studentId = int.Parse(Console.ReadLine());
-            Console.Write("Введите ID курса: ");
-            int courseId = int.Parse(Console.ReadLine());
-
-            Student student = manager.GetStudentById(studentId);
-            Course course = manager.GetCourseById(courseId);
-            if (student != null && course != null)
-            {
-                student.EnrollInCourse(course);
-                Console.WriteLine("Студент записан на курс!");
-            }
-            else
-            {
-                Console.WriteLine("Студент или курс не найдены.");
-            }
-            Console.ReadKey();
-        }
-
-        static void ViewStudentCourses(UniversityManager manager)
-        {
-            Console.Write("Введите ID студента: ");
-            int id = int.Parse(Console.ReadLine());
-            Student student = manager.GetStudentById(id);
-            if (student != null)
-            {
-                Console.WriteLine($"Курсы студента {student.FullName}:");
-                foreach (var course in student.EnrolledCourses)
-                {
-                    Console.WriteLine($"- {course.Name}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Студент не найден.");
-            }
-            Console.ReadKey();
-        }
-
-        static void AddTeacher(UniversityManager manager)
-        {
-            Console.Write("Введите фамилию: ");
-            string lastName = Console.ReadLine();
-            Console.Write("Введите имя: ");
-            string firstName = Console.ReadLine();
-            Console.Write("Введите отчество (если имеется, иначе нажмите Enter): ");
-            string middleName = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(middleName))
-            {
-                middleName = null;
-            }
-            Console.Write("Введите возраст: ");
-            int age = int.Parse(Console.ReadLine());
-
-            Teacher teacher = new Teacher(firstName, lastName, age, middleName);
-            manager.AddTeacher(teacher);
-            Console.WriteLine("Преподаватель добавлен! Нажмите любую клавишу...");
-            Console.ReadKey();
-        }
-
-        static void ViewTeacher(UniversityManager manager)
-        {
-            Console.Write("Введите ID преподавателя: ");
-            int id = int.Parse(Console.ReadLine());
-            Teacher teacher = manager.GetTeacherById(id);
-            if (teacher != null)
-            {
-                teacher.DisplayInfo();
-            }
-            else
-            {
-                Console.WriteLine("Преподаватель не найден.");
-            }
-            Console.ReadKey();
-        }
-
-        static void AssignTeacherToCourse(UniversityManager manager)
-        {
-            Console.Write("Введите ID преподавателя: ");
-            int teacherId = int.Parse(Console.ReadLine());
-            Console.Write("Введите ID курса: ");
-            int courseId = int.Parse(Console.ReadLine());
-
-            Teacher teacher = manager.GetTeacherById(teacherId);
-            Course course = manager.GetCourseById(courseId);
-            if (teacher != null && course != null)
-            {
-                teacher.AssignToCourse(course);
-                Console.WriteLine("Преподаватель назначен на курс!");
-            }
-            else
-            {
-                Console.WriteLine("Преподаватель или курс не найдены.");
-            }
-            Console.ReadKey();
-        }
-
-        static void CreateCourse(UniversityManager manager)
-        {
-            Console.Write("Введите название курса: ");
-            string name = Console.ReadLine();
-            Console.Write("Введите описание курса: ");
-            string description = Console.ReadLine();
-
-            Course course = new Course(name, description);
-            manager.AddCourse(course);
-            Console.WriteLine("Курс создан! Нажмите любую клавишу...");
-            Console.ReadKey();
-        }
-
-        static void ViewCourse(UniversityManager manager)
-        {
-            Console.Write("Введите ID курса: ");
-            int id = int.Parse(Console.ReadLine());
-            Course course = manager.GetCourseById(id);
-            if (course != null)
-            {
-                course.DisplayInfo();
-            }
-            else
-            {
-                Console.WriteLine("Курс не найден.");
-            }
-            Console.ReadKey();
-        }
-
-        static void ViewCourseStudents(UniversityManager manager)
-        {
-            Console.Write("Введите ID курса: ");
-            int id = int.Parse(Console.ReadLine());
-            Course course = manager.GetCourseById(id);
-            if (course != null)
-            {
-                Console.WriteLine($"Студенты на курсе {course.Name}:");
-                foreach (var student in course.Students)
-                {
-                    Console.WriteLine($"- {student.FullName}");
-                }
-            }
-            else
-            {
-                Console.WriteLine("Курс не найден.");
-            }
-            Console.ReadKey();
-        }
-
-        static void ListAllStudents(UniversityManager manager)
-        {
-            Console.WriteLine("Все студенты:");
-            foreach (var student in manager.GetAllStudents())
-            {
-                student.DisplayInfo();
-            }
-            Console.ReadKey();
-        }
-
-        static void ListAllTeachers(UniversityManager manager)
-        {
-            Console.WriteLine("Все преподаватели:");
-            foreach (var teacher in manager.GetAllTeachers())
-            {
-                teacher.DisplayInfo();
-            }
-            Console.ReadKey();
-        }
-
-        static void ListAllCourses(UniversityManager manager)
-        {
-            Console.WriteLine("Все курсы:");
-            foreach (var course in manager.GetAllCourses())
-            {
-                course.DisplayInfo();
-            }
-            Console.ReadKey();
         }
     }
 }
