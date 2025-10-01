@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace UniversityManagementSystem
+namespace sKIP
 {
     // абстрактный класс для человека
     public abstract class Person
