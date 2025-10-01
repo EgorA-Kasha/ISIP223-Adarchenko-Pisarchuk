@@ -242,7 +242,10 @@ namespace UniversityManagementSystem
                 Console.WriteLine("8. Создать курс");
                 Console.WriteLine("9. Просмотреть информацию о курсе");
                 Console.WriteLine("10. Просмотреть студентов на курсе");
-                Console.WriteLine("11. Выход");
+                Console.WriteLine("11. Вывести всех студентов");
+                Console.WriteLine("12. Вывести всех преподавателей");
+                Console.WriteLine("13. Вывести все курсы");
+                Console.WriteLine("14. Выход");
                 Console.Write("Выберите опцию: ");
 
                 string choice = Console.ReadLine();
@@ -280,6 +283,15 @@ namespace UniversityManagementSystem
                         ViewCourseStudents(manager);
                         break;
                     case "11":
+                        ListAllStudents(manager);
+                        break;
+                    case "12":
+                        ListAllTeachers(manager);
+                        break;
+                    case "13":
+                        ListAllCourses(manager);
+                        break;
+                    case "14":
                         running = false;
                         break;
                     default:
@@ -471,6 +483,36 @@ namespace UniversityManagementSystem
             else
             {
                 Console.WriteLine("Курс не найден.");
+            }
+            Console.ReadKey();
+        }
+
+        static void ListAllStudents(UniversityManager manager)
+        {
+            Console.WriteLine("Все студенты:");
+            foreach (var student in manager.GetAllStudents())
+            {
+                student.DisplayInfo();
+            }
+            Console.ReadKey();
+        }
+
+        static void ListAllTeachers(UniversityManager manager)
+        {
+            Console.WriteLine("Все преподаватели:");
+            foreach (var teacher in manager.GetAllTeachers())
+            {
+                teacher.DisplayInfo();
+            }
+            Console.ReadKey();
+        }
+
+        static void ListAllCourses(UniversityManager manager)
+        {
+            Console.WriteLine("Все курсы:");
+            foreach (var course in manager.GetAllCourses())
+            {
+                course.DisplayInfo();
             }
             Console.ReadKey();
         }
