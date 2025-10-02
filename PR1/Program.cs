@@ -483,15 +483,15 @@ namespace sKIP
             while (running)
             {
                 Console.WriteLine("Управление sKIP:");
-                Console.WriteLine("1. Добавить студента");
-                Console.WriteLine("2. Добавить преподавателя");
-                Console.WriteLine("3. Добавить курс");
-                Console.WriteLine("4. Отобразить всех студентов");
-                Console.WriteLine("5. Отобразить всех преподавателей");
-                Console.WriteLine("6. Отобразить все курсы");
-                Console.WriteLine("7. Записать студента на курс");
-                Console.WriteLine("8. Назначить преподавателя на курс");
-                Console.WriteLine("9. Добавить оценку студенту");
+                Console.WriteLine("1.  Добавить студента");
+                Console.WriteLine("2.  Добавить преподавателя");
+                Console.WriteLine("3.  Добавить курс");
+                Console.WriteLine("4.  Отобразить всех студентов");
+                Console.WriteLine("5.  Отобразить всех преподавателей");
+                Console.WriteLine("6.  Отобразить все курсы");
+                Console.WriteLine("7.  Записать студента на курс");
+                Console.WriteLine("8.  Назначить преподавателя на курс");
+                Console.WriteLine("9.  Добавить оценку студенту");
                 Console.WriteLine("10. Выход");
                 Console.Write("Выберите опцию: ");
 
