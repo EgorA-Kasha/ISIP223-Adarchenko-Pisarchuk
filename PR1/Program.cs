@@ -21,6 +21,17 @@ abstract class Entity
 
     // абстрактный метод атаки
     public abstract void AttackTarget(Entity target, Random rand);
+
+    public void DisplayHP(string label)
+    {
+        Console.Write($"{label}: ");
+        Console.ForegroundColor = ConsoleColor.White;
+        if (HP <= 0.25 * MaxHP)
+            Console.ForegroundColor = ConsoleColor.Red;
+        Console.Write(HP);
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine($"/{MaxHP}");
+    }
 }
 
 // интерфейс для предметов
@@ -166,7 +177,7 @@ class Enemy : Entity
         }
 
         player.HP -= actualDamage;
-        Console.WriteLine($"{Name} наносит {actualDamage} урона!");
+        Console.WriteLine($"{Name} наносит {actualDamage} урона!\n");
 
         if (rand.NextDouble() < FreezeChance)
         {
@@ -268,11 +279,13 @@ class Game
     // метод для боя
     private void Battle(Enemy enemy)
     {
-        Console.WriteLine($"Вы столкнулись с {enemy.Name}! HP: {enemy.HP}, Атака: {enemy.Attack}, Защита: {enemy.Defense}");
+        Console.WriteLine($"Вы столкнулись с {enemy.Name}!");
+        Console.WriteLine($"HP: {enemy.MaxHP} Атака: {enemy.Attack} Защита: {enemy.Defense}\n");
+
         while (player.HP > 0 && enemy.HP > 0)
         {
-            Console.WriteLine($"\nВаше HP: {player.HP}/{player.MaxHP}");
-            Console.WriteLine($"HP врага: {enemy.HP}");
+            player.DisplayHP("Ваше HP");
+            enemy.DisplayHP("HP врага");
 
             if (!player.IsFrozen)
             {
@@ -284,7 +297,7 @@ class Game
                 }
                 else if (choice == "D")
                 {
-                    player.Defend(rand); // защита, но урон будет учтен в атаке врага
+                    player.Defend(rand); // Защита, но урон будет учтен в атаке врага
                 }
                 else
                 {
@@ -297,6 +310,7 @@ class Game
                 Console.WriteLine("Вы заморожены и пропускаете ход!");
                 player.IsFrozen = false;
             }
+
             if (enemy.HP > 0)
             {
                 enemy.AttackTarget(player, rand);
@@ -304,7 +318,7 @@ class Game
 
             if (player.HP <= 0)
             {
-                Console.WriteLine("Вы погибли!\n Игра окончена.");
+                Console.WriteLine("Вы погибли! Игра окончена.");
                 return;
             }
         }
