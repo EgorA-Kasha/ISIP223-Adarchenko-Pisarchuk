@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+
 using System.Linq;
 using System.Reflection.Metadata;
 
@@ -26,7 +26,7 @@ abstract class Entity
     {
         Console.Write($"{label}: ");
         Console.ForegroundColor = ConsoleColor.White;
-        if (HP <= 0.25 * MaxHP)
+        if (HP <= 0.30 * MaxHP)
             Console.ForegroundColor = ConsoleColor.Red;
         Console.Write(HP);
         Console.ForegroundColor = ConsoleColor.White;
@@ -297,7 +297,7 @@ class Game
                 }
                 else if (choice == "D")
                 {
-                    player.Defend(rand); // Защита, но урон будет учтен в атаке врага
+                    player.Defend(rand); // защита, но урон будет учтен в атаке врага
                 }
                 else
                 {
