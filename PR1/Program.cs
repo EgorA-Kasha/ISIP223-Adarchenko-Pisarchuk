@@ -276,7 +276,7 @@ class Game
 
             if (!player.IsFrozen)
             {
-                Console.Write("Ваш ход: (A)така или (D)efense? ");
+                Console.Write("Ваш ход: (A)ttack или (D)efense? ");
                 string choice = Console.ReadLine().ToUpper();
                 if (choice == "A")
                 {
@@ -324,6 +324,9 @@ class Game
         while (player.HP > 0)
         {
             turn++;
+            Console.Clear();
+            Console.WriteLine("Добро пожаловать в текстовую игру!");
+            Console.WriteLine("Каждый ход: сундук или враг. Каждые 10 ходов - босс.");
             Console.WriteLine($"\n--- Ход {turn} ---");
 
             bool isBoss = (turn % 10 == 0);
