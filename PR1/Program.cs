@@ -304,7 +304,7 @@ class Game
 
             if (player.HP <= 0)
             {
-                Console.WriteLine("Вы погибли! Игра окончена.");
+                Console.WriteLine("Вы погибли!\n Игра окончена.");
                 return;
             }
         }
@@ -347,8 +347,6 @@ class Game
 
             if (player.HP <= 0) break;
         }
-
-        Console.WriteLine("Игра окончена.");
     }
 }
 
