@@ -5,13 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-    internal interface IItem
+internal interface IItem
 {
     string Name { get; }
     void Equip(Player player);
 }
 
-    internal class Weapon : IItem
+internal class Weapon : IItem
 {
     public string Name { get; }
     public int AttackBonus { get; }
@@ -31,7 +31,7 @@ using System.Threading.Tasks;
     public override string ToString() => $"{Name} (Атака: {AttackBonus})";
 }
 
-    internal class Armor : IItem
+internal class Armor : IItem
 {
     public string Name { get; }
     public int DefenseBonus { get; }

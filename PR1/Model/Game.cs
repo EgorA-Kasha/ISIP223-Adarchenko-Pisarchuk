@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-    internal class Game
+internal class Game
 {
     private Player player;
     private EnemyFactory factory;

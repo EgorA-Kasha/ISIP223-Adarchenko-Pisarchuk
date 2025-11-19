@@ -5,36 +5,36 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-    abstract class Entity
+abstract class Entity
 {
-    // базовый класс для сущностей (игрок и враги)
-        public int HP { get; set; }
-        public int MaxHP { get; set; }
-        public int Attack { get; set; }
-        public int Defense { get; set; }
+// базовый класс для сущностей (игрок и враги)
+    public int HP { get; set; }
+    public int MaxHP { get; set; }
+    public int Attack { get; set; }
+    public int Defense { get; set; }
 
-        protected Entity(int hp, int attack, int defense)
-        {
-            MaxHP = hp;
-            HP = hp;
-            Attack = attack;
-            Defense = defense;
-        }
-
-        // абстрактный метод атаки
-        public abstract void AttackTarget(Entity target, Random rand);
-
-        public void DisplayHP(string label)
-        {
-            Console.Write($"{label}: ");
-            Console.ForegroundColor = ConsoleColor.White;
-            if (HP <= 0.30 * MaxHP)
-                Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(HP);
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine($"/{MaxHP}");
-        }
+    protected Entity(int hp, int attack, int defense)
+    {
+        MaxHP = hp;
+        HP = hp;
+        Attack = attack;
+        Defense = defense;
     }
+
+    // абстрактный метод атаки
+    public abstract void AttackTarget(Entity target, Random rand);
+
+    public void DisplayHP(string label)
+    {
+        Console.Write($"{label}: ");
+        Console.ForegroundColor = ConsoleColor.White;
+        if (HP <= 0.30 * MaxHP)
+            Console.ForegroundColor = ConsoleColor.Red;
+        Console.Write(HP);
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine($"/{MaxHP}");
+    }
+}
 
 // игрок
 class Player : Entity
