@@ -56,15 +56,17 @@ class Player : Entity
 
         int damage = Math.Max(1, Attack - target.Defense);
 
+        int actualDamage;
+
         if (enemy.DamageReduction == true)
         {
-            damage -= 2;
+            actualDamage = damage - 2;
         }
         else
         {
-            damage = Math.Max(1, Attack - target.Defense);
+            actualDamage = Math.Max(1, Attack - target.Defense);
         }
-        target.HP -= damage;
+        target.HP -= actualDamage;
         Console.WriteLine($"Вы наносите {damage} урона!");
     }
 

@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 internal class EnemyFactory
 // Фабрика для генерации врагов и боссов
 {
-    //private Random rand = new Random();
-
     public Enemy GenerateEnemy()
     {
         int type = RandomProvider.Next(4);
