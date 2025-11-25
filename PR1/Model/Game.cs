@@ -9,24 +9,24 @@ internal class Game
 {
     private Player player;
     private EnemyFactory factory;
-    private Random rand;
+    private Random RandomProvider;
     private int turn;
 
     public Game()
     {
         player = new Player();
         factory = new EnemyFactory();
-        rand = new Random();
+        RandomProvider = new Random();
         turn = 0;
     }
 
     // метод для генерации лута
     private object GenerateLoot()
     {
-        int type = rand.Next(3);
+        int type = RandomProvider.Next(3);
         if (type == 0) return new Potion();
-        else if (type == 1) return new Weapon($"Меч {rand.Next(5, 21)}", rand.Next(5, 21));
-        else return new Armor($"Броня {rand.Next(2, 11)}", rand.Next(2, 11));
+        else if (type == 1) return new Weapon($"Меч {RandomProvider.Next(5, 21)}", RandomProvider.Next(5, 21));
+        else return new Armor($"Броня {RandomProvider.Next(2, 11)}", RandomProvider.Next(2, 11));
     }
 
     // метод для обработки сундука
@@ -79,16 +79,16 @@ internal class Game
                 string choice = Console.ReadLine().ToUpper();
                 if (choice == "A")
                 {
-                    player.AttackTarget(enemy, rand);
+                    player.AttackTarget(enemy, RandomProvider);
                 }
                 else if (choice == "D")
                 {
-                    player.Defend(rand); // защита, но урон будет учтен в атаке врага
+                    player.Defend(RandomProvider); // защита, но урон будет учтен в атаке врага
                 }
                 else
                 {
                     Console.WriteLine("Неверный выбор, считаем атакой.");
-                    player.AttackTarget(enemy, rand);
+                    player.AttackTarget(enemy, RandomProvider);
                 }
             }
             else
@@ -99,7 +99,7 @@ internal class Game
 
             if (enemy.HP > 0)
             {
-                enemy.AttackTarget(player, rand);
+                enemy.AttackTarget(player, RandomProvider);
             }
 
             if (player.HP <= 0)
@@ -130,7 +130,7 @@ internal class Game
             Console.WriteLine($"\n--- Ход {turn} ---");
 
             bool isBoss = (turn % 10 == 0);
-            bool isChest = rand.Next(2) == 0;
+            bool isChest = RandomProvider.Next(2) == 0;
 
             if (isBoss)
             {

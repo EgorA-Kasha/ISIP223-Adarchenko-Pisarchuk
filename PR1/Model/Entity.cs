@@ -22,7 +22,7 @@ abstract class Entity
     }
 
     // абстрактный метод атаки
-    public abstract void AttackTarget(Entity target, Random rand);
+    public abstract void AttackTarget(Entity target, Random RandomProvider);
 
     public void DisplayHP(string label)
     {
@@ -50,7 +50,7 @@ class Player : Entity
         IsFrozen = false;
     }
 
-    public override void AttackTarget(Entity target, Random rand)
+    public override void AttackTarget(Entity target, Random RandomProvider)
     {
         Enemy enemy = target as Enemy;
 
@@ -69,16 +69,16 @@ class Player : Entity
     }
 
     // защита
-    public int Defend(Random rand)
+    public int Defend(Random RandomProvider)
     {
-        if (rand.NextDouble() < 0.4)
+        if (RandomProvider.NextDouble() < 0.4)
         {
             Console.WriteLine("Вы уклонились от атаки!");
             return -1; // уклонение
         }
         else
         {
-            double blockPercent = 0.7 + rand.NextDouble() * 0.3;
+            double blockPercent = 0.7 + RandomProvider.NextDouble() * 0.3;
             int block = (int)(Defense * blockPercent);
             Console.WriteLine($"Вы блокируете {block} урона!");
             return block;
@@ -105,13 +105,13 @@ class Enemy : Entity
         DamageReduction = damageReduction;
     }
 
-    public override void AttackTarget(Entity target, Random rand)
+    public override void AttackTarget(Entity target, Random RandomProvider)
     {
         Player player = target as Player;
         if (player == null) return;
 
         int damage = Attack;
-        if (rand.NextDouble() < CritChance)
+        if (RandomProvider.NextDouble() < CritChance)
         {
             damage *= 2;
             Console.WriteLine($"{Name} наносит критический удар!");
@@ -137,7 +137,7 @@ class Enemy : Entity
         player.HP -= actualDamage;
         Console.WriteLine($"{Name} наносит {actualDamage} урона!\n");
 
-        if (rand.NextDouble() < FreezeChance)
+        if (RandomProvider.NextDouble() < FreezeChance)
         {
             player.IsFrozen = true;
             Console.WriteLine($"{Name} замораживает вас! Вы пропускаете следующий ход.");

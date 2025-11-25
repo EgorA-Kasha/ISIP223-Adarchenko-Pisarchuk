@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 internal class EnemyFactory
 // Фабрика для генерации врагов и боссов
 {
-    private Random rand = new Random();
+    //private Random rand = new Random();
 
     public Enemy GenerateEnemy()
     {
-        int type = rand.Next(4);
+        int type = RandomProvider.Next(4);
         switch (type)
         {
             case 0: return new Enemy("Гоблин", 40, 8, 2, 0.2, 0, false, false);
@@ -24,7 +24,7 @@ internal class EnemyFactory
 
     public Enemy GenerateBoss()
     {
-        int type = rand.Next(4);
+        int type = RandomProvider.Next(4);
         switch (type)
         {
             case 0: return new Enemy("ВВГ"        , (int)(40 * 2.0), (int)(8 * 1.5), (int)(2 * 1.2), 0.2 + 0.1, 0          , false, false);
