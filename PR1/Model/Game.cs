@@ -4,152 +4,171 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
-internal class Game
+namespace TextBasedRPG
 {
-    private Player player;
-    private EnemyFactory factory;
-    private Random RandomProvider;
-    private int turn;
-
-    public Game()
+    // класс игры
+    internal class Game
     {
-        player = new Player();
-        factory = new EnemyFactory();
-        RandomProvider = new Random();
-        turn = 0;
-    }
+        private Player player;
+        private EnemyFactory factory;
+        private int turn;
 
-    // метод для генерации лута
-    private object GenerateLoot()
-    {
-        int type = RandomProvider.Next(3);
-        if (type == 0) return new Potion();
-        else if (type == 1) return new Weapon($"Меч {RandomProvider.Next(5, 21)}", RandomProvider.Next(5, 21));
-        else return new Armor($"Броня {RandomProvider.Next(2, 11)}", RandomProvider.Next(2, 11));
-    }
-
-    // метод для обработки сундука
-    private void HandleChest()
-    {
-        Console.WriteLine("Вы нашли сундук!");
-        object loot = GenerateLoot();
-        if (loot is Potion potion)
+        public Game()
         {
-            potion.Use(player);
+            player = new Player("Игрок", 100, 10, 0);
+            factory = new EnemyFactory();
+            turn = 0;
         }
-        else if (loot is IItem item)
+
+        // генерации лута
+        private IItem GenerateLoot()
         {
-            Console.WriteLine($"Вы нашли: {item}");
-            if (item is Weapon)
+            int type = RandomHelper.Next(3);
+            if (type == 0) return new Potion();
+            else if (type == 1) return new Weapon($"Меч +{RandomHelper.Next(5, 21)}", RandomHelper.Next(5, 21));
+            else return new Armor($"Броня +{RandomHelper.Next(2, 11)}", RandomHelper.Next(2, 11));
+        }
+
+        // сундук
+        private void HandleChest()
+        {
+            Console.WriteLine("Вы нашли сундук!");
+            IItem loot = GenerateLoot();
+            if (loot is Potion potion)
             {
-                Console.WriteLine($"Текущее оружие: {player.Weapon}");
-            }
-            else if (item is Armor)
-            {
-                Console.WriteLine($"Текущие доспехи: {player.Armor}");
-            }
-            Console.Write("Взять? (Y/N): ");
-            if (Console.ReadLine().ToUpper() == "Y")
-            {
-                item.Equip(player);
-                Console.WriteLine("Предмет экипирован!");
+                potion.Use(player);
+                Console.WriteLine("Нажмите Enter для продолжения...");
+                Console.ReadLine();
             }
             else
             {
-                Console.WriteLine("Предмет выброшен.");
-            }
-        }
-    }
-
-    // метод для боя
-    private void Battle(Enemy enemy)
-    {
-        Console.WriteLine($"Вы столкнулись с {enemy.Name}!");
-        Console.WriteLine($"HP: {enemy.MaxHP} Атака: {enemy.Attack} Защита: {enemy.Defense}\n");
-
-        while (player.HP > 0 && enemy.HP > 0)
-        {
-            player.DisplayHP("Ваше HP");
-            enemy.DisplayHP("HP врага");
-
-            if (!player.IsFrozen)
-            {
-                Console.Write("Ваш ход: (A)ttack или (D)efense? ");
-                string choice = Console.ReadLine().ToUpper();
-                if (choice == "A")
+                Console.WriteLine($"Вы нашли: {loot}");
+                if (loot is Weapon)
                 {
-                    player.AttackTarget(enemy, RandomProvider);
+                    Console.WriteLine($"Текущее оружие: {player.Weapon?.Name ?? "Нет"}");
                 }
-                else if (choice == "D")
+                else if (loot is Armor)
                 {
-                    player.Defend(RandomProvider); // защита, но урон будет учтен в атаке врага
+                    Console.WriteLine($"Текущие доспехи: {player.Armor?.Name ?? "Нет"}");
+                }
+                Console.Write("Взять? (Y/N): ");
+                string input = Console.ReadLine()?.ToUpper() ?? "";
+                if (input == "Y")
+                {
+                    loot.Equip(player);
+                    Console.WriteLine("Предмет экипирован!");
                 }
                 else
                 {
-                    Console.WriteLine("Неверный выбор, считаем атакой.");
-                    player.AttackTarget(enemy, RandomProvider);
+                    Console.WriteLine("Предмет выброшен.");
                 }
             }
-            else
-            {
-                Console.WriteLine("Вы заморожены и пропускаете ход!");
-                player.IsFrozen = false;
-            }
+            Console.WriteLine();
+        }
 
-            if (enemy.HP > 0)
-            {
-                enemy.AttackTarget(player, RandomProvider);
-            }
+        // бой
+        private void Battle(AbstractEnemy enemy)
+        {
+            Console.WriteLine($"Вы столкнулись с {enemy.Name}!");
+            player.DisplayStatus();
+            enemy.DisplayStatus();
 
-            if (player.HP <= 0)
+            while (player.IsAlive && enemy.IsAlive)
             {
-                Console.WriteLine("Вы погибли! Игра окончена.");
-                return;
+                int playerDefend = 0;
+                bool playerTurnTaken = false;
+
+                // обработка хода игрока
+                if (player.IsFrozen)
+                {
+                    Console.WriteLine("Вы заморожены и пропускаете ход!");
+                    player.Unfreeze();
+                    playerTurnTaken = true;
+                }
+                else
+                {
+                    while (!playerTurnTaken)
+                    {
+                        Console.Write("Ваш ход: (A)ttack или (D)efense? ");
+                        string choice = Console.ReadLine()?.ToLower().Trim() ?? "";
+                        if (choice.StartsWith("a") || choice.Contains("attack"))
+                        {
+                            int net = enemy.TakeDamage(player.GetAttack());
+                            Console.WriteLine($"Вы наносите {net} урона!");
+                            playerTurnTaken = true;
+                        }
+                        else if (choice.StartsWith("d") || choice.Contains("defense"))
+                        {
+                            playerDefend = 1;
+                            Console.WriteLine("Вы защищаетесь, снижая урон противника.");
+                            playerTurnTaken = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Неверная команда, повторяем ход.");
+                        }
+                    }
+                }
+
+                // проверка после хода игрока
+                if (!enemy.IsAlive)
+                {
+                    player.DisplayStatus();
+                    enemy.DisplayStatus();
+                    Console.WriteLine("Вы победили!");
+                    return;
+                }
+
+                // ход врага
+                enemy.AttackWithDefend(player, playerDefend);
+                Console.WriteLine();
+
+                // проверка после хода врага
+                if (!player.IsAlive)
+                {
+                    player.DisplayStatus();
+                    enemy.DisplayStatus();
+                    Console.WriteLine("Игра окончена. Вы проиграли.");
+                    return;
+                }
+
+                player.DisplayStatus();
+                enemy.DisplayStatus();
             }
         }
 
-        if (enemy.HP <= 0)
+        // основной игровой цикл
+        public void Run()
         {
-            Console.WriteLine($"Вы победили {enemy.Name}!");
-        }
-    }
-
-    // основной игровой цикл
-    public void Run()
-    {
-        Console.WriteLine("Добро пожаловать в текстовую игру!");
-        Console.WriteLine("Каждый ход: сундук или враг. Каждые 10 ходов - босс.");
-
-        while (player.HP > 0)
-        {
-            turn++;
-            Console.Clear();
-            Console.WriteLine("Добро пожаловать в текстовую игру!");
-            Console.WriteLine("Каждый ход: сундук или враг. Каждые 10 ходов - босс.");
-            Console.WriteLine($"\n--- Ход {turn} ---");
-
-            bool isBoss = (turn % 10 == 0);
-            bool isChest = RandomProvider.Next(2) == 0;
-
-            if (isBoss)
+            while (player.IsAlive)
             {
-                Console.WriteLine("Вам встречается босс!");
-                Enemy boss = factory.GenerateBoss();
-                Battle(boss);
-            }
-            else if (isChest)
-            {
-                HandleChest();
-            }
-            else
-            {
-                Enemy enemy = factory.GenerateEnemy();
-                Battle(enemy);
-            }
+                turn++;
+                Console.Clear();
+                Console.WriteLine("Добро пожаловать в текстовую игру!");
+                Console.WriteLine("Каждый ход: сундук или враг. Каждые 10 ходов - босс.");
+                Console.WriteLine($"\n--- Ход {turn} ---");
 
-            if (player.HP <= 0) break;
+                bool isBoss = (turn % 10 == 0);
+                bool isChest = !isBoss && RandomHelper.Next(2) == 0;
+
+                if (isBoss)
+                {
+                    Console.WriteLine("Вам встречается босс!");
+                    AbstractEnemy boss = factory.GenerateBoss();
+                    Battle(boss);
+                }
+                else if (isChest)
+                {
+                    HandleChest();
+                }
+                else
+                {
+                    AbstractEnemy enemy = factory.GenerateEnemy();
+                    Battle(enemy);
+                }
+
+                if (!player.IsAlive) break;
+            }
         }
     }
 }
-

@@ -1,148 +1,94 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TextBasedRPG;
 
-
-abstract class Entity
+namespace TextBasedRPG
 {
-// базовый класс для сущностей (игрок и враги)
-    public int HP { get; set; }
-    public int MaxHP { get; set; }
-    public int Attack { get; set; }
-    public int Defense { get; set; }
-
-    protected Entity(int hp, int attack, int defense)
+    // базовый класс сущности
+    public class Entity
     {
-        MaxHP = hp;
-        HP = hp;
-        Attack = attack;
-        Defense = defense;
-    }
+        public string Name { get; set; }
+        public int Health { get; set; }
+        public int MaxHealth { get; set; }
+        public int Attack { get; set; }
+        public int Defense { get; set; }
 
-    // абстрактный метод атаки
-    public abstract void AttackTarget(Entity target, Random RandomProvider);
+        public Entity(string name, int health, int attack, int defense)
+        {
+            Name = name;
+            MaxHealth = health;
+            Health = health;
+            Attack = attack;
+            Defense = defense;
+        }
 
-    public void DisplayHP(string label)
-    {
-        Console.Write($"{label}: ");
-        Console.ForegroundColor = ConsoleColor.White;
-        if (HP <= 0.30 * MaxHP)
-            Console.ForegroundColor = ConsoleColor.Red;
-        Console.Write(HP);
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.WriteLine($"/{MaxHP}");
+        public virtual int TakeDamage(int damage)
+        {
+            int net = Math.Max(0, damage - Defense);
+            Health -= net;
+            return net;
+        }
+
+        public bool IsAlive => Health > 0;
+
+        public virtual void DisplayStatus()
+        {
+            double percent = (double)Health / MaxHealth * 100.0;
+            ConsoleColor color = percent > 70 ? ConsoleColor.Green : percent > 30 ? ConsoleColor.Yellow : ConsoleColor.Red;
+            Console.ForegroundColor = color;
+            Console.WriteLine($"{Name}: HP {Health}/{MaxHealth}");
+            Console.ResetColor();
+        }
     }
 }
 
-// игрок
-class Player : Entity
+// сам игрок
+public class Player : Entity
 {
+    public bool IsFrozen { get; set; } = false;
     public Weapon Weapon { get; set; }
     public Armor Armor { get; set; }
-    public bool IsFrozen { get; set; }
 
-    public Player() : base(100, 10, 3) // базовые значения
+    public Player(string name, int health, int attack, int defense) : base(name, health, attack, defense)
     {
-        Weapon = new Weapon("Кулаки", 0);
-        Armor = new Armor("Тряпье", 0);
+        Weapon = null;
+        Armor = null;
+    }
+
+    public override int TakeDamage(int damage)
+    {
+        return TakeDamage(damage, false);
+    }
+
+    public int TakeDamage(int damage, bool ignoreArmor)
+    {
+        int totalDef = Defense + (ignoreArmor ? 0 : (Armor?.Defense ?? 0));
+        int net = Math.Max(0, damage - totalDef);
+        if (net == 0 && damage > 0)
+        {
+            net = 1;
+        }
+        Health -= net;
+        return net;
+    }
+
+    public int GetAttack()
+    {
+        return Attack + (Weapon?.Attack ?? 0);
+    }
+
+    public void Heal(int amount)
+    {
+        Health += amount;
+        if (Health > MaxHealth) Health = MaxHealth;
+    }
+
+    public void Unfreeze()
+    {
         IsFrozen = false;
-    }
-
-    public override void AttackTarget(Entity target, Random RandomProvider)
-    {
-        Enemy enemy = target as Enemy;
-
-        int damage = Math.Max(1, Attack - target.Defense);
-
-        int actualDamage;
-
-        if (enemy.DamageReduction == true)
-        {
-            actualDamage = damage - 2;
-        }
-        else
-        {
-            actualDamage = Math.Max(1, Attack - target.Defense);
-        }
-        target.HP -= actualDamage;
-        Console.WriteLine($"Вы наносите {damage} урона!");
-    }
-
-    // защита
-    public int Defend(Random RandomProvider)
-    {
-        if (RandomProvider.NextDouble() < 0.4)
-        {
-            Console.WriteLine("Вы уклонились от атаки!");
-            return -1; // уклонение
-        }
-        else
-        {
-            double blockPercent = 0.7 + RandomProvider.NextDouble() * 0.3;
-            int block = (int)(Defense * blockPercent);
-            Console.WriteLine($"Вы блокируете {block} урона!");
-            return block;
-        }
-    }
-}
-
-// враг
-class Enemy : Entity
-{
-    public string Name { get; }
-    public double CritChance { get; }
-    public double FreezeChance { get; }
-    public bool IgnoresDefense { get; }
-    public bool DamageReduction { get; }
-
-    public Enemy(string name, int hp, int attack, int defense, double critChance = 0, double freezeChance = 0, bool ignoresDefense = false, bool damageReduction = false)
-        : base(hp, attack, defense)
-    {
-        Name = name;
-        CritChance = critChance;
-        FreezeChance = freezeChance;
-        IgnoresDefense = ignoresDefense;
-        DamageReduction = damageReduction;
-    }
-
-    public override void AttackTarget(Entity target, Random RandomProvider)
-    {
-        Player player = target as Player;
-        if (player == null) return;
-
-        int damage = Attack;
-        if (RandomProvider.NextDouble() < CritChance)
-        {
-            damage *= 2;
-            Console.WriteLine($"{Name} наносит критический удар!");
-        }
-
-        int actualDamage;
-        if (IgnoresDefense)
-        {
-            actualDamage = damage;
-            Console.WriteLine($"{Name} игнорирует вашу защиту!");
-        }
-        else
-        {
-            actualDamage = Math.Max(1, damage - player.Defense);
-        }
-
-        if (DamageReduction)
-        {
-            Console.WriteLine($"{Name} поглощает 2 единицы урона!");
-        }
-
-
-        player.HP -= actualDamage;
-        Console.WriteLine($"{Name} наносит {actualDamage} урона!\n");
-
-        if (RandomProvider.NextDouble() < FreezeChance)
-        {
-            player.IsFrozen = true;
-            Console.WriteLine($"{Name} замораживает вас! Вы пропускаете следующий ход.");
-        }
     }
 }

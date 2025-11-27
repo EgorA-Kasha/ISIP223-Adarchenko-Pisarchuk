@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Xml.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-class Program
+namespace TextBasedRPG
 {
-    static void Main(string[] args)
+    // основная программа
+    class Program
     {
-        Game game = new Game();
-        game.Run();
+        static void Main(string[] args)
+        {
+            Game game = new Game();
+            game.Run();
+        }
     }
 }
